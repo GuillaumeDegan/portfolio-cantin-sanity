@@ -24,36 +24,24 @@ export const projectType = defineType({
           const client = context.getClient({apiVersion: '2024-01-01'})
           const documentId = context.document?._id
           const baseId = documentId?.replace(/^drafts\./, '') ?? ''
-          const excludeIds =
-            baseId.length > 0 ? [`drafts.${baseId}`, baseId] : []
+          const excludeIds = baseId.length > 0 ? [`drafts.${baseId}`, baseId] : []
 
           const duplicateCount = await client.fetch<number>(
             excludeIds.length > 0
               ? `count(*[_type == "project" && slug.current == $slug && !(_id in $excludeIds)])`
               : `count(*[_type == "project" && slug.current == $slug])`,
-            excludeIds.length > 0
-              ? {slug: current, excludeIds}
-              : {slug: current},
+            excludeIds.length > 0 ? {slug: current, excludeIds} : {slug: current},
           )
 
           return duplicateCount === 0 || 'Ce slug est déjà utilisé par un autre projet.'
         }),
     }),
     defineField({
-      name: 'category',
-      title: 'Catégorie',
-      type: 'string',
-      options: {
-        list: [
-          {title: '2D', value: '2d'},
-          {title: '3D', value: '3d'},
-          {title: 'Motion design', value: 'motion-design'},
-          {title: 'Film', value: 'film'},
-          {title: 'Peinture', value: 'painting'},
-        ],
-        layout: 'radio',
-      },
-      validation: (rule) => rule.required(),
+      name: 'categories',
+      title: 'Catégories',
+      type: 'array',
+      of: [{type: 'reference', to: [{type: 'category'}]}],
+      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: 'coverImage',
