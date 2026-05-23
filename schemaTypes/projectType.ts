@@ -1,5 +1,50 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
+const projectImageMember = defineArrayMember({
+  type: 'image',
+  title: 'Image',
+  options: {hotspot: true},
+  fields: [
+    defineField({
+      name: 'alt',
+      title: 'Texte alternatif',
+      type: 'string',
+      description: 'Important pour l’accessibilité et le SEO.',
+    }),
+  ],
+})
+
+const projectYoutubeMember = defineArrayMember({
+  type: 'object',
+  name: 'youtubeVideo',
+  title: 'Vidéo YouTube',
+  fields: [
+    defineField({
+      name: 'url',
+      title: 'Lien YouTube',
+      type: 'string',
+      description:
+        'Coller l’URL complète (page watch, youtu.be ou lien embed). Le stockage vidéo reste sur YouTube.',
+      validation: (rule) =>
+        rule.required().custom((value) => {
+          if (!value?.trim()) return true
+          const v = value.trim().toLowerCase()
+          const isYoutube = v.includes('youtube.com/') || v.includes('youtu.be/')
+          return isYoutube || 'Utilisez une URL YouTube (youtube.com ou youtu.be)'
+        }),
+    }),
+  ],
+  preview: {
+    select: {url: 'url'},
+    prepare({url}) {
+      return {
+        title: 'Vidéo YouTube',
+        subtitle: url || 'Lien manquant',
+      }
+    },
+  },
+})
+
 export const projectType = defineType({
   name: 'project',
   title: 'Projet',
@@ -44,69 +89,19 @@ export const projectType = defineType({
       validation: (rule) => rule.required().min(1),
     }),
     defineField({
-      name: 'coverImage',
-      title: 'Image de couverture',
-      type: 'image',
-      options: {hotspot: true},
-      fields: [
-        defineField({
-          name: 'alt',
-          title: 'Texte alternatif',
-          type: 'string',
-          description: 'Important pour l’accessibilité et le SEO.',
-        }),
-      ],
-      validation: (rule) => rule.required(),
+      name: 'cover',
+      title: 'Couverture',
+      description: 'Une image ou une vidéo YouTube pour la couverture du projet.',
+      type: 'array',
+      of: [projectImageMember, projectYoutubeMember],
+      validation: (rule) => rule.required().min(1).max(1),
     }),
     defineField({
       name: 'gallery',
       title: 'Médias du projet',
       description: 'Images et vidéos optionnelles pour illustrer le projet.',
       type: 'array',
-      of: [
-        defineArrayMember({
-          type: 'image',
-          title: 'Image',
-          options: {hotspot: true},
-          fields: [
-            defineField({
-              name: 'alt',
-              title: 'Texte alternatif',
-              type: 'string',
-            }),
-          ],
-        }),
-        defineArrayMember({
-          type: 'object',
-          name: 'youtubeVideo',
-          title: 'Vidéo YouTube',
-          fields: [
-            defineField({
-              name: 'url',
-              title: 'Lien YouTube',
-              type: 'string',
-              description:
-                'Coller l’URL complète (page watch, youtu.be ou lien embed). Le stockage vidéo reste sur YouTube.',
-              validation: (rule) =>
-                rule.required().custom((value) => {
-                  if (!value?.trim()) return true
-                  const v = value.trim().toLowerCase()
-                  const isYoutube = v.includes('youtube.com/') || v.includes('youtu.be/')
-                  return isYoutube || 'Utilisez une URL YouTube (youtube.com ou youtu.be)'
-                }),
-            }),
-          ],
-          preview: {
-            select: {url: 'url'},
-            prepare({url}) {
-              return {
-                title: 'Vidéo YouTube',
-                subtitle: url || 'Lien manquant',
-              }
-            },
-          },
-        }),
-      ],
+      of: [projectImageMember, projectYoutubeMember],
     }),
     defineField({
       name: 'publishedAt',
